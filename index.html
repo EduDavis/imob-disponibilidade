@@ -778,7 +778,7 @@
                 const response = await fetch('data.json');
                 const data = await response.json();
                 if (allUnits.length === 0) {
-                    allUnits = data;
+                    allUnits = Array.isArray(data) ? data : (data.units || []);
                 }
                 updateStats();
                 populateFilters();

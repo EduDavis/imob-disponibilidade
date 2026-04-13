@@ -1,5 +1,4 @@
-{
-  "units": [
+[
     {"id": 1, "enterprise": "ORLA RECREIO - GRUMARI", "block": "BLOCO 4", "unit": "103", "fractionId": "0.003451", "matricula": "461508", "vagaVin": "x", "inscricao": "", "status": "available", "price": 470000, "broker": ""},
     {"id": 2, "enterprise": "ORLA RECREIO - GRUMARI", "block": "BLOCO 4", "unit": "104", "fractionId": "0.003451", "matricula": "461509", "vagaVin": "x", "inscricao": "", "status": "available", "price": 470000, "broker": ""},
     {"id": 3, "enterprise": "ORLA RECREIO - GRUMARI", "block": "BLOCO 4", "unit": "403", "fractionId": "0.003245", "matricula": "461522", "vagaVin": "x", "inscricao": "", "status": "available", "price": 470000, "broker": ""},
@@ -65,5 +64,4 @@
     {"id": 63, "enterprise": "ORLA RECREIO - RESERVA", "block": "BLOCO 2", "unit": "505", "fractionId": "0.004192", "matricula": "478838", "vagaVin": "074", "inscricao": "", "status": "available", "price": 515000, "broker": ""},
     {"id": 64, "enterprise": "ORLA RECREIO - RESERVA", "block": "BLOCO 2", "unit": "506", "fractionId": "0.004192", "matricula": "478839", "vagaVin": "075", "inscricao": "", "status": "available", "price": 515000, "broker": ""},
     {"id": 65, "enterprise": "ORLA RECREIO - RESERVA", "block": "BLOCO 2", "unit": "507", "fractionId": "0.004156", "matricula": "478849", "vagaVin": "076", "inscricao": "", "status": "available", "price": 525000, "broker": ""}
-  ]
-}
+]
