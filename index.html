@@ -1445,8 +1445,11 @@
                 saveToLocalStorage();
                 return;
             }
-            db.ref('units').set(allUnits).catch(error => {
-                console.error('Erro ao salvar no Firebase:', error);
+            // Tentar salvar no Firebase, se falhar usa LocalStorage
+            db.ref('units').set(allUnits).then(() => {
+                console.log('Dados salvos no Firebase com sucesso');
+            }).catch(error => {
+                console.warn('Erro ao salvar no Firebase (usando LocalStorage):', error);
                 saveToLocalStorage();
             });
         }
