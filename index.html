@@ -769,6 +769,9 @@
             }
         }
     </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
 </head>
 <body>
     <div class="container">
@@ -1362,6 +1365,7 @@
                 unit.broker = '';
             }
 
+            saveToFirebase();
             saveToLocalStorage();
             closeEditModal();
             updateStats();
@@ -1408,14 +1412,67 @@
             };
 
             allUnits.push(newUnit);
+            saveToFirebase();
             saveToLocalStorage();
             closeAddModal();
             applyFilters();
             showMessage('Unidade adicionada com sucesso!', 'success');
         }
 
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "LTzmXpbRIHT0Xcw3HxLuuvs6s8z8MQqnLVJHoB13",
+            authDomain: "imob-disponibilidade.firebaseapp.com",
+            databaseURL: "https://imob-disponibilidade-default-rtdb.firebaseio.com",
+            projectId: "imob-disponibilidade",
+            storageBucket: "imob-disponibilidade.appspot.com",
+            messagingSenderId: "492857489365",
+            appId: "1:492857489365:web:YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            console.log('Firebase inicializado com sucesso');
+        } catch (error) {
+            console.log('Firebase não disponível, usando LocalStorage');
+        }
+
+        function saveToFirebase() {
+            if (!db) {
+                saveToLocalStorage();
+                return;
+            }
+            db.ref('units').set(allUnits).catch(error => {
+                console.error('Erro ao salvar no Firebase:', error);
+                saveToLocalStorage();
+            });
+        }
+
         function saveToLocalStorage() {
             localStorage.setItem('imobUnits', JSON.stringify(allUnits));
+        }
+
+        function loadFromFirebase() {
+            if (!db) {
+                loadFromLocalStorage();
+                return;
+            }
+            db.ref('units').once('value', snapshot => {
+                if (snapshot.exists()) {
+                    allUnits = snapshot.val();
+                    updateStats();
+                    renderTable();
+                    renderGrid();
+                } else {
+                    loadFromLocalStorage();
+                }
+            }).catch(error => {
+                console.error('Erro ao carregar do Firebase:', error);
+                loadFromLocalStorage();
+            });
         }
 
         function loadFromLocalStorage() {
@@ -1423,6 +1480,20 @@
             if (saved) {
                 allUnits = JSON.parse(saved);
             }
+        }
+
+        // Sincronizar mudanças em tempo real
+        function setupRealtimeSync() {
+            if (!db) return;
+            db.ref('units').on('value', snapshot => {
+                if (snapshot.exists()) {
+                    const firebaseData = snapshot.val();
+                    allUnits = firebaseData;
+                    updateStats();
+                    renderTable();
+                    renderGrid();
+                }
+            });
         }
 
         function showMessage(text, type, elementId = 'message') {
@@ -1436,7 +1507,8 @@
 
         // Initialize
         document.getElementById('masterplanBtn').style.display = 'none';
-        loadFromLocalStorage();
+        loadFromFirebase();
+        setupRealtimeSync();
         loadData();
     </script>
 </body>
