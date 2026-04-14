@@ -836,6 +836,7 @@
                 return matchEnterprise && matchBlock && matchSearch && matchStatus;
             });
             
+            console.log('applyFilters:', filteredUnits.length, 'unidades filtradas');
             renderTable();
             renderGrid();
             updateMasterplanButton();
@@ -884,12 +885,15 @@
             const gridView = document.getElementById('gridView');
             gridView.innerHTML = '';
             
+            console.log('renderGrid:', filteredUnits.length, 'unidades');
+            
             const grouped = {};
             filteredUnits.forEach(unit => {
                 const key = `${unit.enterprise} - ${unit.block}`;
                 if (!grouped[key]) grouped[key] = [];
                 grouped[key].push(unit);
             });
+            console.log('Grupos:', Object.keys(grouped).length);
             
             Object.entries(grouped).forEach(([key, units]) => {
                 const section = document.createElement('div');
