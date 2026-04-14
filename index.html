@@ -663,6 +663,7 @@
     </div>
 
     <script>
+        console.log('✓ Script iniciado');
         let allUnits = [];
         let filteredUnits = [];
         let isAdmin = false;
@@ -712,12 +713,13 @@
 
         // Aguardar Firebase SDK carregar - Compatível com todos os navegadores
         function waitForFirebase() {
+            console.log('✓ waitForFirebase chamado');
             let attempts = 0;
             const maxAttempts = 20;
             
             function checkFirebase() {
                 attempts++;
-                console.log('Tentativa ' + attempts + ' de carregar Firebase...');
+                console.log('Tentativa ' + attempts + ' de carregar Firebase... typeof firebase =', typeof firebase);
                 
                 if (typeof firebase !== 'undefined' && firebase.apps) {
                     console.log('✓ Firebase SDK detectado!');
