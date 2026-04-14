@@ -711,18 +711,33 @@
             }
         }
 
-        // Aguardar Firebase SDK carregar
-        setTimeout(function() {
-            console.log('✓ Verificando Firebase...');
-            if (typeof firebase !== 'undefined') {
-                console.log('✓ Firebase detectado!');
-                initFirebase();
+        // Carregar dados apenas quando o usuário abre a página
+        // Atualizar apenas se passou 3+ horas desde a última atualização
+        function initializeApp() {
+            console.log('✓ Inicializando aplicativo...');
+            
+            // Verificar última atualização
+            const lastUpdate = localStorage.getItem('lastUpdateTime');
+            const now = new Date().getTime();
+            const threeHours = 3 * 60 * 60 * 1000; // 3 horas em ms
+            
+            if (!lastUpdate || (now - parseInt(lastUpdate)) > threeHours) {
+                console.log('✓ Atualizando dados (passou 3+ horas)...');
+                localStorage.setItem('lastUpdateTime', now);
+                loadData(); // Carregar do data.json
             } else {
-                console.log('⚠ Firebase não carregou, usando LocalStorage');
+                console.log('✓ Usando dados em cache (menos de 3 horas)');
                 loadFromLocalStorage();
                 loadData();
             }
-        }, 2000);
+        }
+        
+        // Iniciar quando a página carregar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
 
         function saveToFirebase() {
             if (!db) {
@@ -772,47 +787,9 @@
         }
 
         function setupRealtimeSync() {
-            if (!db) {
-                console.log('⚠ Firebase não disponível, real-time sync desativado');
-                return;
-            }
-            
-            // Sincronização em tempo real - Compatível com todos os navegadores
-            try {
-                db.ref('units').on('value', snapshot => {
-                    if (snapshot && snapshot.exists && snapshot.exists()) {
-                        const firebaseData = snapshot.val();
-                        
-                        // Verificar se há mudanças
-                        if (firebaseData && JSON.stringify(firebaseData) !== JSON.stringify(allUnits)) {
-                            console.log('🔄 Sincronizando dados do Firebase em tempo real');
-                            allUnits = firebaseData;
-                            
-                            // Salvar em LocalStorage para compatibilidade
-                            try {
-                                saveToLocalStorage();
-                            } catch (e) {
-                                console.warn('⚠ Não foi possível salvar em LocalStorage:', e);
-                            }
-                            
-                            // Atualizar interface
-                            updateStats();
-                            renderTable();
-                            renderGrid();
-                            console.log('✓ Dados sincronizados com sucesso');
-                        }
-                    }
-                }, error => {
-                    console.error('✗ Erro na sincronização em tempo real:', error);
-                    // Tentar reconectar em 5 segundos
-                    setTimeout(() => {
-                        console.log('🔄 Tentando reconectar ao Firebase...');
-                        setupRealtimeSync();
-                    }, 5000);
-                });
-            } catch (error) {
-                console.error('✗ Erro ao configurar sincronização em tempo real:', error);
-            }
+            // Sincronização em tempo real desativada
+            // Dados são atualizados apenas quando o usuário abre a página
+            console.log('✓ Sincronização programada (5 atualizações diárias)');
         }
 
         function saveToLocalStorage() {
