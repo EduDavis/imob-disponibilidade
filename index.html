@@ -711,37 +711,18 @@
             }
         }
 
-        // Aguardar Firebase SDK carregar - Compatível com todos os navegadores
-        function waitForFirebase() {
-            console.log('✓ waitForFirebase chamado');
-            let attempts = 0;
-            const maxAttempts = 20;
-            
-            function checkFirebase() {
-                attempts++;
-                console.log('Tentativa ' + attempts + ' de carregar Firebase... typeof firebase =', typeof firebase);
-                
-                if (typeof firebase !== 'undefined' && firebase.apps) {
-                    console.log('✓ Firebase SDK detectado!');
-                    initFirebase();
-                } else if (attempts < maxAttempts) {
-                    setTimeout(checkFirebase, 500);
-                } else {
-                    console.warn('⚠ Firebase SDK não carregou, usando LocalStorage');
-                    loadFromLocalStorage();
-                    loadData();
-                }
+        // Aguardar Firebase SDK carregar
+        setTimeout(function() {
+            console.log('✓ Verificando Firebase...');
+            if (typeof firebase !== 'undefined') {
+                console.log('✓ Firebase detectado!');
+                initFirebase();
+            } else {
+                console.log('⚠ Firebase não carregou, usando LocalStorage');
+                loadFromLocalStorage();
+                loadData();
             }
-            
-            checkFirebase();
-        }
-
-        // Iniciar quando o script carregar
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', waitForFirebase);
-        } else {
-            waitForFirebase();
-        }
+        }, 2000);
 
         function saveToFirebase() {
             if (!db) {
