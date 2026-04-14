@@ -464,7 +464,7 @@
             }
         }
     </style>
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK - Carregamento prioritário -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
 </head>
@@ -712,19 +712,34 @@
 
         // Aguardar Firebase SDK carregar - Compatível com todos os navegadores
         function waitForFirebase() {
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    // Aguardar 1.5s para garantir que o Firebase SDK carregou
-                    setTimeout(initFirebase, 1500);
-                });
-            } else {
-                // Página já carregou
-                setTimeout(initFirebase, 1500);
+            let attempts = 0;
+            const maxAttempts = 20;
+            
+            function checkFirebase() {
+                attempts++;
+                console.log('Tentativa ' + attempts + ' de carregar Firebase...');
+                
+                if (typeof firebase !== 'undefined' && firebase.apps) {
+                    console.log('✓ Firebase SDK detectado!');
+                    initFirebase();
+                } else if (attempts < maxAttempts) {
+                    setTimeout(checkFirebase, 500);
+                } else {
+                    console.warn('⚠ Firebase SDK não carregou, usando LocalStorage');
+                    loadFromLocalStorage();
+                    loadData();
+                }
             }
+            
+            checkFirebase();
         }
 
         // Iniciar quando o script carregar
-        waitForFirebase();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForFirebase);
+        } else {
+            waitForFirebase();
+        }
 
         function saveToFirebase() {
             if (!db) {
