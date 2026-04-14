@@ -713,52 +713,73 @@
 
         function saveToFirebase() {
             if (!db) {
+                console.log('Firebase não disponível, salvando apenas em LocalStorage');
                 saveToLocalStorage();
                 return;
             }
+            
+            // Salvar no Firebase com prioridade
             db.ref('units').set(allUnits).then(() => {
-                console.log('Dados salvos no Firebase com sucesso');
+                console.log('✓ Dados salvos no Firebase com sucesso');
+                saveToLocalStorage(); // Backup em LocalStorage
             }).catch(error => {
-                console.warn('Erro ao salvar no Firebase:', error);
+                console.error('✗ Erro ao salvar no Firebase:', error);
+                // Fallback para LocalStorage
                 saveToLocalStorage();
             });
         }
 
         function loadFromFirebase() {
             if (!db) {
+                console.log('Firebase não disponível, carregando do LocalStorage');
                 loadFromLocalStorage();
                 loadData();
                 return;
             }
+            
+            // Tentar carregar do Firebase primeiro
             db.ref('units').once('value', snapshot => {
                 if (snapshot.exists()) {
                     allUnits = snapshot.val();
-                    console.log('Dados carregados do Firebase');
+                    console.log('✓ Dados carregados do Firebase');
+                    // Sincronizar com LocalStorage
+                    saveToLocalStorage();
                 } else {
+                    console.log('Nenhum dado no Firebase, carregando do LocalStorage');
                     loadFromLocalStorage();
                 }
                 loadData();
                 setupRealtimeSync();
             }).catch(error => {
-                console.error('Erro ao carregar do Firebase:', error);
+                console.error('✗ Erro ao carregar do Firebase:', error);
+                console.log('Usando LocalStorage como fallback');
                 loadFromLocalStorage();
                 loadData();
             });
         }
 
         function setupRealtimeSync() {
-            if (!db) return;
+            if (!db) {
+                console.log('Firebase não disponível, real-time sync desativado');
+                return;
+            }
+            
+            // Sincronização em tempo real
             db.ref('units').on('value', snapshot => {
                 if (snapshot.exists()) {
                     const firebaseData = snapshot.val();
                     if (JSON.stringify(firebaseData) !== JSON.stringify(allUnits)) {
+                        console.log('🔄 Sincronizando dados do Firebase em tempo real');
                         allUnits = firebaseData;
+                        saveToLocalStorage(); // Manter LocalStorage sincronizado
                         updateStats();
                         renderTable();
                         renderGrid();
-                        console.log('Dados sincronizados do Firebase');
+                        console.log('✓ Dados sincronizados com sucesso');
                     }
                 }
+            }, error => {
+                console.error('✗ Erro na sincronização em tempo real:', error);
             });
         }
 
