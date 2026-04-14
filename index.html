@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a7ea4">
     <title>Orla Recreio - Disponibilidade de Unidades</title>
     <style>
         * {
@@ -679,37 +683,48 @@
         };
 
         // Initialize Firebase quando o SDK estiver pronto
+        // Compatível com Chrome, Firefox, Safari, Edge e outros navegadores
         function initFirebase() {
             try {
-                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                    db = firebase.database();
-                    console.log('Firebase inicializado com sucesso');
-                    loadFromFirebase();
-                } else if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                    db = firebase.database();
-                    console.log('Firebase já estava inicializado');
-                    loadFromFirebase();
+                // Verificar se Firebase SDK está disponível
+                if (typeof firebase !== 'undefined' && firebase.apps) {
+                    if (firebase.apps.length === 0) {
+                        firebase.initializeApp(firebaseConfig);
+                        db = firebase.database();
+                        console.log('✓ Firebase inicializado com sucesso');
+                        loadFromFirebase();
+                    } else {
+                        db = firebase.database();
+                        console.log('✓ Firebase já estava inicializado');
+                        loadFromFirebase();
+                    }
                 } else {
-                    console.log('Firebase SDK ainda não carregou, usando LocalStorage');
+                    console.log('⚠ Firebase SDK ainda não carregou, usando LocalStorage');
                     loadFromLocalStorage();
                     loadData();
                 }
             } catch (error) {
-                console.warn('Erro ao inicializar Firebase:', error);
+                console.error('✗ Erro ao inicializar Firebase:', error);
                 loadFromLocalStorage();
                 loadData();
             }
         }
 
-        // Aguardar Firebase SDK carregar
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(initFirebase, 1000);
-            });
-        } else {
-            setTimeout(initFirebase, 1000);
+        // Aguardar Firebase SDK carregar - Compatível com todos os navegadores
+        function waitForFirebase() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Aguardar 1.5s para garantir que o Firebase SDK carregou
+                    setTimeout(initFirebase, 1500);
+                });
+            } else {
+                // Página já carregou
+                setTimeout(initFirebase, 1500);
+            }
         }
+
+        // Iniciar quando o script carregar
+        waitForFirebase();
 
         function saveToFirebase() {
             if (!db) {
@@ -760,53 +775,106 @@
 
         function setupRealtimeSync() {
             if (!db) {
-                console.log('Firebase não disponível, real-time sync desativado');
+                console.log('⚠ Firebase não disponível, real-time sync desativado');
                 return;
             }
             
-            // Sincronização em tempo real
-            db.ref('units').on('value', snapshot => {
-                if (snapshot.exists()) {
-                    const firebaseData = snapshot.val();
-                    if (JSON.stringify(firebaseData) !== JSON.stringify(allUnits)) {
-                        console.log('🔄 Sincronizando dados do Firebase em tempo real');
-                        allUnits = firebaseData;
-                        saveToLocalStorage(); // Manter LocalStorage sincronizado
-                        updateStats();
-                        renderTable();
-                        renderGrid();
-                        console.log('✓ Dados sincronizados com sucesso');
+            // Sincronização em tempo real - Compatível com todos os navegadores
+            try {
+                db.ref('units').on('value', snapshot => {
+                    if (snapshot && snapshot.exists && snapshot.exists()) {
+                        const firebaseData = snapshot.val();
+                        
+                        // Verificar se há mudanças
+                        if (firebaseData && JSON.stringify(firebaseData) !== JSON.stringify(allUnits)) {
+                            console.log('🔄 Sincronizando dados do Firebase em tempo real');
+                            allUnits = firebaseData;
+                            
+                            // Salvar em LocalStorage para compatibilidade
+                            try {
+                                saveToLocalStorage();
+                            } catch (e) {
+                                console.warn('⚠ Não foi possível salvar em LocalStorage:', e);
+                            }
+                            
+                            // Atualizar interface
+                            updateStats();
+                            renderTable();
+                            renderGrid();
+                            console.log('✓ Dados sincronizados com sucesso');
+                        }
                     }
-                }
-            }, error => {
-                console.error('✗ Erro na sincronização em tempo real:', error);
-            });
+                }, error => {
+                    console.error('✗ Erro na sincronização em tempo real:', error);
+                    // Tentar reconectar em 5 segundos
+                    setTimeout(() => {
+                        console.log('🔄 Tentando reconectar ao Firebase...');
+                        setupRealtimeSync();
+                    }, 5000);
+                });
+            } catch (error) {
+                console.error('✗ Erro ao configurar sincronização em tempo real:', error);
+            }
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('imobUnits', JSON.stringify(allUnits));
+            try {
+                // Verificar se LocalStorage está disponível (Safari em modo privado pode bloquear)
+                const test = '__localStorage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                
+                // Salvar dados
+                localStorage.setItem('imobUnits', JSON.stringify(allUnits));
+                console.log('✓ Dados salvos em LocalStorage');
+            } catch (e) {
+                console.warn('⚠ LocalStorage não disponível (modo privado?):', e);
+                // Continuar sem LocalStorage
+            }
         }
 
         function loadFromLocalStorage() {
-            const saved = localStorage.getItem('imobUnits');
-            if (saved) {
-                allUnits = JSON.parse(saved);
+            try {
+                const saved = localStorage.getItem('imobUnits');
+                if (saved) {
+                    allUnits = JSON.parse(saved);
+                    console.log('✓ Dados carregados do LocalStorage');
+                }
+            } catch (e) {
+                console.warn('⚠ Erro ao carregar do LocalStorage:', e);
+                // Continuar sem LocalStorage
             }
         }
 
         async function loadData() {
             try {
+                // Compativel com todos os navegadores (Chrome, Firefox, Safari, Edge)
                 const response = await fetch('data.json');
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar data.json: ' + response.status);
+                }
+                
                 const data = await response.json();
+                
                 if (allUnits.length === 0) {
                     allUnits = Array.isArray(data) ? data : (data.units || []);
                 }
-                console.log('Dados carregados:', allUnits.length, 'unidades');
+                
+                console.log('✓ Dados carregados:', allUnits.length, 'unidades');
                 updateStats();
                 populateFilters();
                 applyFilters();
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
+                console.error('✗ Erro ao carregar dados:', error);
+                // Tentar usar dados em cache ou LocalStorage
+                loadFromLocalStorage();
+                if (allUnits.length > 0) {
+                    console.log('✓ Usando dados do cache');
+                    updateStats();
+                    populateFilters();
+                    applyFilters();
+                }
             }
         }
 
