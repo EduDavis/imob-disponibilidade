@@ -780,9 +780,10 @@
                 if (allUnits.length === 0) {
                     allUnits = Array.isArray(data) ? data : (data.units || []);
                 }
+                console.log('Dados carregados:', allUnits.length, 'unidades');
                 updateStats();
                 populateFilters();
-                renderGrid();
+                applyFilters();
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
             }
