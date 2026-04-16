@@ -586,6 +586,10 @@
                     <option value="sold">✕ Vendido</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Preço (R$)</label>
+                <input type="number" id="editPrice" placeholder="Ex: 470000">
+            </div>
             <div class="form-group" id="brokerField" style="display: none;">
                 <label>Nome do Corretor</label>
                 <input type="text" id="editBroker" placeholder="Nome do corretor">
@@ -1015,6 +1019,7 @@
             
             document.getElementById('editUnit').value = `${unit.enterprise} - ${unit.block} - ${unit.unit}`;
             document.getElementById('editStatus').value = unit.status;
+            document.getElementById('editPrice').value = unit.price || '';
             document.getElementById('editBroker').value = unit.broker || '';
             document.getElementById('editFractionId').value = unit.fractionId || '';
             document.getElementById('editMatricula').value = unit.matricula || '';
@@ -1040,6 +1045,7 @@
             
             const newStatus = document.getElementById('editStatus').value;
             unit.status = newStatus;
+            unit.price = parseInt(document.getElementById('editPrice').value) || 0;
             unit.fractionId = document.getElementById('editFractionId').value;
             unit.matricula = document.getElementById('editMatricula').value;
             unit.vagaVin = document.getElementById('editVagaVin').value;
